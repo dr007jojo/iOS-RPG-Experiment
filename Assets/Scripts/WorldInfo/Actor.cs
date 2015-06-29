@@ -9,9 +9,6 @@ public class Actor : MonoBehaviour
 	public float maxHealth = 100;		//max health a character can have
 	//-------
 	
-	//events-----------
-	public event EventNotification Death;	//event to notify on death
-	
 	//status
 	public Slider healthSlider;			//to reference the slider component for Health
 	
@@ -87,29 +84,10 @@ public class Actor : MonoBehaviour
 		//logging out
 		//Debug.Log ("Actor died: " + this.gameObject.ToString ());
 		
-		//calling the event
-		eventDeath ();
+		//invoking event on death
+		EventManager.info.invokeEvent (ref EventManager.info.onDeath, gameObject);
 	}
 	
-	
-	///events------------------
-	/// <summary>
-	/// call event on Death
-	/// </summary>
-	protected internal void eventDeath ()
-	{
-		//sends a message to the GameInfo/battleInfo with its associated gameobject
-		battleController.info.SendMessage ("onActorDeath", gameObject);	//later this call will made to the current controller, after we create a GameInfo Class
-	
-		//sends message to this entire hierarchy of gameobject
-		SendMessage ("Death", SendMessageOptions.DontRequireReceiver);	//broadcast message
-		
-		
-		//event notification
-		if (Death != null) {
-			Death ();
-		}
-	}
 	
 	//utilities---
 	//health slider

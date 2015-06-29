@@ -52,6 +52,7 @@ public class Character : Actor
 	
 	
 	
+	
 	/// <summary>
 	/// Shake this instance
 	/// </summary>
@@ -92,8 +93,6 @@ public class Character : Actor
 	
 	}
 	
-	
-	
 	/// <summary>
 	/// Backs to idle pos.
 	/// </summary>
@@ -107,39 +106,10 @@ public class Character : Actor
 		.OnComplete (() => onActivated (null, false));	//deactivating the infos
 	}
 	
-	/// <summary>
-	/// when this character is activated. 
-	/// </summary>
-	virtual public void onActivated (GameObject currentTarget = null, bool bActive =false)
-	{
-		//we may write some common feature here later
-		
-		//(test)-will make it more efficient later
-		battleController.info.enemyFlag.SetActive (bActive);
-		battleController.info.playerFlag.SetActive (bActive);
-		
-		//implement in the subclass
-	}
-	
-	
-	//-----spell related
+	//skill related----------------
 	
 	/// <summary>
-	/// Updates the mana.
-	/// </summary>
-	/// <param name="amount">Amount.</param>
-	public void updateMana (float amount)
-	{
-		mana = Mathf.Clamp (mana + amount, 0, maxMana);	//clamping the resulting value to go beyond 0
-		
-		//updating the slider
-		updateManaSlider ();
-	}
-	
-	//skills-------
-	
-	/// <summary>
-	/// Fights multiple target -> basic use is select the character and press multiple attack button it will attack multiple targets---
+	/// skill - Fights multiple target -> basic use is select the character and press multiple attack button it will attack multiple targets---
 	/// </summary>
 	/// <param name="targets">Targets.</param>
 	/// <param name="fightEndTweener">Fight end tweener.</param>
@@ -172,7 +142,21 @@ public class Character : Actor
 		
 	}
 	
-	// utilities
+	/// <summary>
+	/// Updates the mana.
+	/// </summary>
+	/// <param name="amount">Amount.</param>
+	public void updateMana (float amount)
+	{
+		mana = Mathf.Clamp (mana + amount, 0, maxMana);	//clamping the resulting value to go beyond 0
+		
+		//updating the slider
+		updateManaSlider ();
+	}
+	
+
+	
+	//utilities-----------------------
 	
 	//Mana Slider
 	protected void updateManaSlider ()
@@ -191,6 +175,21 @@ public class Character : Actor
 	{
 		return (mana >= requiredMana) ? true : false;
 	}
+	
+	/// <summary>
+	/// when this character is activated. 
+	/// </summary>
+	virtual public void onActivated (GameObject currentTarget = null, bool bActive =false)
+	{
+		//we may write some common feature here later
+		
+		//(test)-will make it more efficient later
+		battleController.info.enemyFlag.SetActive (bActive);
+		battleController.info.playerFlag.SetActive (bActive);
+		
+		//implement in the subclass
+	}
+	
 	
 	
 	

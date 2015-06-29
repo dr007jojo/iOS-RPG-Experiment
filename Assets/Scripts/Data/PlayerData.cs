@@ -61,6 +61,13 @@ public class PlayerData : MonoBehaviour
 		} 
 	} 
 	
+	//3个英雄单位技能是否解锁
+	public bool[] mPartyLeaderSkills;
+	public bool[] mPartySecondCharSkills;
+	public bool[] mPartyThirdCharSkills;
+	
+	public uint[] mPartyItems;
+	
 	void Awake ()
 	{
 		// making sure that only of these exist and it is not lost when new scene is loaded
@@ -70,13 +77,21 @@ public class PlayerData : MonoBehaviour
 		} else if (mPlayerData != this) {
 			Destroy (gameObject);
 		}
+		
+		saveFileName = Application.persistentDataPath + "/playerInfo.dat";
+		Debug.Log ("saveFileName = " + saveFileName);
 	}
 	
 	// Use this for initialization
 	void Start ()
 	{
-		saveFileName = Application.persistentDataPath + "/playerInfo.dat";
-		Debug.Log ("saveFileName = " + saveFileName);
+		int totalNumberOfSkills = Enum.GetNames (typeof(SkillNames)).Length;
+		mPartyLeaderSkills = new bool[totalNumberOfSkills];
+		mPartySecondCharSkills = new bool[totalNumberOfSkills];
+		mPartyThirdCharSkills = new bool[totalNumberOfSkills];
+		
+		int totalNmeberOfItems = Enum.GetNames (typeof(ItemNames)).Length;
+		mPartyItems = new uint[totalNmeberOfItems];
 	}
 	
 	// Use this to access the data in other scripts
@@ -86,7 +101,7 @@ public class PlayerData : MonoBehaviour
 	}
 	
 	// This will work on every platform except web
-	// Need to check if additional work is required for ios devices
+	// Need to check if additional work is required for ios devices 存成二进制文件
 	public void Save ()
 	{
 		BinaryFormatter bf = new BinaryFormatter ();
@@ -97,6 +112,10 @@ public class PlayerData : MonoBehaviour
 		data.mPartyGold = mPartyGold;
 		data.mPartyExperience = mPartyExperience;
 		data.mPartyLevel = mPartyLevel;
+		data.mPartyLeaderSkills = mPartyLeaderSkills;
+		data.mPartySecondCharSkills = mPartySecondCharSkills;
+		data.mPartyThirdCharSkills = mPartyThirdCharSkills;
+		data.mPartyItems = mPartyItems;
 		
 		bf.Serialize (file, data); // Can also serialize to string and send over the web or write to playerprefs
 		file.Close ();
@@ -115,6 +134,10 @@ public class PlayerData : MonoBehaviour
 			mPartyGold = data.mPartyGold;
 			mPartyExperience = data.mPartyExperience;
 			mPartyLevel = data.mPartyLevel;
+			mPartyLeaderSkills = data.mPartyLeaderSkills;
+			mPartySecondCharSkills = data.mPartySecondCharSkills;
+			mPartyThirdCharSkills = data.mPartyThirdCharSkills;
+			mPartyItems = data.mPartyItems;
 			
 			Debug.Log ("Load successful");
 		} else {
@@ -130,4 +153,11 @@ class SaveData
 	public uint mPartyGold;
 	public uint mPartyExperience;
 	public uint mPartyLevel;
+	
+	//控制英雄单位具体技能是否解锁
+	public bool[] mPartyLeaderSkills;
+	public bool[] mPartySecondCharSkills;
+	public bool[] mPartyThirdCharSkills;
+	
+	public uint[] mPartyItems;
 }
