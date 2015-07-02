@@ -36,6 +36,7 @@ public class battleController : MonoBehaviour
 	}
 	;
 	public BattleActions currentBattleAction = BattleActions.NONE;	//default
+	bool isPlayerRetreating = false;	//player retreat
 	
 	
 	// swipe variables
@@ -85,15 +86,45 @@ public class battleController : MonoBehaviour
 	IEnumerator battleSequence ()
 	{
 		Debug.Log ("Start battle");
+		isPlayerRetreating = false;
 		
 		do {
 			yield return StartCoroutine (playerTurn ());
 			
+			if (isPlayerRetreating)
+				break;
 			yield return StartCoroutine (enemyAttack ());
 			
 		} while(Players.Any() && Enemies.Any());
 		
 		Debug.Log ("Battle End");
+
+		if (isPlayerRetreating)
+			OnBattleRetreat ();
+		else if (Enemies.Any ())
+			OnBattleLose ();
+		else
+			OnBattleWin ();
+
+		yield return null;
+	}
+
+	// call the distribute the winnings according to enemy level
+	public void OnBattleWin ()
+	{
+		Debug.Log ("Battle Win");
+	}
+
+	// deduct gold based on player level
+	public void OnBattleLose ()
+	{
+		Debug.Log ("Battle Lose");
+	}
+
+	// deduct less gold than losing
+	public void OnBattleRetreat ()
+	{
+		Debug.Log ("Retreat");
 	}
 	
 	/// <summary>
@@ -226,6 +257,10 @@ public class battleController : MonoBehaviour
 					if (ItemList.mAllItems [currentItemId].mIsAreaItem) {
 						while (currentEnemyIndex == -1) {
 							// wait for player to select target
+							for (int i = 0; i <Players.Count(); ++i) {
+								if (Enemies [i].GetComponent<Enemy> ().isTouched ())
+									OnSwitchEnemy (i);
+							}
 							yield return null;
 						}
 					} else {
@@ -245,10 +280,18 @@ public class battleController : MonoBehaviour
 				
 					currentEnemyIndex = -1;
 					if (SkillList.mAllSkills [currentSkillId].mIsAreaSpell) {
+						Debug.Log ("waiting for player to select target");
 						while (currentEnemyIndex == -1) {
-							Debug.Log ("waiting for player to select target");
-							// wait for player to select target
-							yield return null;
+							while (currentEnemyIndex == -1) {
+								// wait for player to select emey in case of targetted attack
+								for (int i = 0; i <Players.Count(); ++i) {
+									if (Enemies [i].GetComponent<Enemy> ().isTouched ())
+										OnSwitchEnemy (i);
+								}
+							
+							
+								yield return null;
+							}
 						}
 					} else {
 						currentEnemyIndex = 0; // This is done to avoid null reference
@@ -261,11 +304,17 @@ public class battleController : MonoBehaviour
 				break;
 				
 			case BattleActions.RETREAT:
+				{
+					// show a dialogue box asking for confirmation
+					// on click yes isPlayerRetreating = true;
+					// on click no currentBattleAction = BattleActions.NONE;
+				}
 				break;
 			}
 			
 			Hud.GetInstance ().OnHideItems ();
 			Hud.GetInstance ().OnHideSkills ();
+			enemyFlag.SetActive (false);
 			yield return null;
 		}
 		
@@ -308,6 +357,14 @@ public class battleController : MonoBehaviour
 		currentPlayerIndex = index;
 		playerFlag.GetComponent<ActiveCharacterInfo> ().setActivateArrow (Players [currentPlayerIndex].transform);
 		Debug.Log ("current player index is " + currentPlayerIndex);
+	}
+	
+	void OnSwitchEnemy (int index)
+	{
+		enemyFlag.SetActive (true);
+		currentEnemyIndex = index;
+		enemyFlag.GetComponent<ActiveCharacterInfo> ().setActivateArrow (Enemies [currentEnemyIndex].transform);
+		Debug.Log ("current enemy index is " + currentEnemyIndex);
 	}
 	
 	/// <summary>
@@ -377,7 +434,8 @@ public class battleController : MonoBehaviour
 				
 			case TouchPhase.Ended:
 				var swipeTime = Time.time - startTime;
-				var swipeDist = (touch.position - startPos).magnitude;
+				Vector2 EndPos = touch.position;
+				var swipeDist = (EndPos - startPos).magnitude;
 				
 				if (couldBeSwipe  && (swipeTime < maxSwipeTime) && (swipeDist > minSwipeDist)) 
 				{
@@ -404,6 +462,15 @@ public class battleController : MonoBehaviour
 		#endif
 		
 		return -1;
+	}
+	
+	//UI interaction related --------------------
+	
+	//attack button
+	public void buttonPress_OnAttack ()
+	{
+		//changing the state to attack
+		currentBattleAction = BattleActions.ATTACK;
 	}
 	
 }

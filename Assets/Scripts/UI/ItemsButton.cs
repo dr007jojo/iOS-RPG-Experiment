@@ -12,13 +12,15 @@ public class ItemsButton : MonoBehaviour
 	
 	public void SetData (string itemName, int itemId)
 	{
+		//gameObject.GetComponent<RectTransform> ().SetWidth (transform.parent.GetComponent<RectTransform> ().rect.width);
+		
 		itemButtonText.text = itemName;
 		this.itemId = itemId;
 	}
 	
 	public void OnClick ()
 	{
-		battleController.info.currentSkillId = itemId;
+		battleController.info.currentItemId = itemId;
 		battleController.info.currentBattleAction = battleController.BattleActions.ITEM;
 	}
 }
