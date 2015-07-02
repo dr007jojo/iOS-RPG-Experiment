@@ -10,7 +10,8 @@ public enum menus
 	None,
 	Item,
 	Skill,
-	Pause
+	Pause,
+	Retreat
 	
 	//add all the menus here
 }
@@ -33,6 +34,9 @@ public class Hud : MonoBehaviour
 	private float skillTop;
 	private SkillButton skillBtn;
 	private ItemsButton itemBtn;
+
+	public UIPopupBox retreatConfirmBox;
+	public UIMessage messageBox;
 	
 	static Hud thisInstance = null;
 	
@@ -54,6 +58,8 @@ public class Hud : MonoBehaviour
 		//设置两个面板为未激活状态
 		skillsPanel.SetActive (false);
 		itemsPanel.SetActive (false);
+		retreatConfirmBox.gameObject.SetActive (false);
+		messageBox.gameObject.SetActive (false);
 	}
 	
 	void Update ()
@@ -79,7 +85,7 @@ public class Hud : MonoBehaviour
 	public void OnShowSkills ()
 	{
 		if (currentMenu != menus.None)	//if any menu is open, just return
-			return;
+			return;						//TODO: Dont return! That could cause infinite loop in BattleController. Instead close the other menus.
 		
 		skillsPanel.SetActive (true);
 		currentMenu = menus.Skill;	//skill menu active
@@ -141,7 +147,7 @@ public class Hud : MonoBehaviour
 		}
 		skillsPanel.SetActive (false);
 		
-		if (currentMenu != menus.None)	//close menu
+		if (currentMenu != menus.None)	//on lose menu
 			currentMenu = menus.None;
 	}
 	
@@ -149,7 +155,7 @@ public class Hud : MonoBehaviour
 	public void OnShowItems ()
 	{
 		if (currentMenu != menus.None)	//if any menu is open, just return
-			return;
+			return;						//TODO: Dont return! That could cause infinite loop in BattleController. Instead close the other menus.
 			
 		itemsPanel.SetActive (true);
 		currentMenu = menus.Item;	//item menu active
@@ -177,10 +183,77 @@ public class Hud : MonoBehaviour
 		}
 		itemsPanel.SetActive (false);
 		
-		if (currentMenu != menus.None)	//close menu
+		if (currentMenu != menus.None)	//on close menu
 			currentMenu = menus.None;
 	}
 	
+	public void ShowRetreatConfirmation ()
+	{
+		if (currentMenu != menus.None)	//TODO: Dont return! That could cause infinite loop in BattleController. Instead close the other menus.
+			return;
+
+		retreatConfirmBox.gameObject.SetActive (true);
+		currentMenu = menus.Retreat;
+
+		retreatConfirmBox.SetData ("Are you sure you want to retreat?", OnRetreatYes, OnRetreatNo);
+		battleController.info.OnRetreat ();
+	}
+
+	public void OnClickAttack ()
+	{
+		battleController.info.OnAttack ();
+	}
+
+	public void OnRetreatYes ()
+	{
+		currentMenu = menus.None;
+		retreatConfirmBox.gameObject.SetActive (false);
+		battleController.info.OnRetreatConfirm ();
+	}
+
+	public void OnRetreatNo ()
+	{
+		currentMenu = menus.None;
+		retreatConfirmBox.gameObject.SetActive (false);
+		battleController.info.OnRetreatCancel ();
+	}
+
+	public void ShowRetreatSuccessMessage ()
+	{
+		Debug.Log ("Retreat Success");
+		messageBox.gameObject.SetActive (true);
+		messageBox.ShowWithText ("Retreat Success!");
+	}
+
+	public void ShowRetreatFailMessage ()
+	{
+		Debug.Log ("Retreat Fail");
+		messageBox.gameObject.SetActive (true);
+		messageBox.ShowWithText ("Retreat Failed!");
+	}
+
+	public void ShowBattleStartMessage ()
+	{
+		Debug.Log ("Battle Start");
+		messageBox.gameObject.SetActive (true);
+		messageBox.ShowWithText ("Battle!");
+	}
+
+	public void ShowBattleWinMessage ()
+	{
+		Debug.Log ("Battle Win");
+		messageBox.gameObject.SetActive (true);
+		messageBox.ShowWithText ("Battle Won!");
+	}
+
+	public void ShowBattleLostMessage ()
+	{
+		Debug.Log ("Battle Lose");
+		messageBox.gameObject.SetActive (true);
+		messageBox.ShowWithText ("Battle Lost!");
+	}
+	
+
 }
 
 

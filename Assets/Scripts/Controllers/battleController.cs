@@ -37,6 +37,7 @@ public class battleController : MonoBehaviour
 	;
 	public BattleActions currentBattleAction = BattleActions.NONE;	//default
 	bool isPlayerRetreating = false;	//player retreat
+	[Range(0, 1)]public float chanceOfRetreat = 0.3f;
 	
 	
 	// swipe variables
@@ -85,7 +86,8 @@ public class battleController : MonoBehaviour
 	//main battle sequence
 	IEnumerator battleSequence ()
 	{
-		Debug.Log ("Start battle");
+		Hud.GetInstance().ShowBattleStartMessage();
+		
 		isPlayerRetreating = false;
 		
 		do {
@@ -112,19 +114,19 @@ public class battleController : MonoBehaviour
 	// call the distribute the winnings according to enemy level
 	public void OnBattleWin ()
 	{
-		Debug.Log ("Battle Win");
+		Hud.GetInstance().ShowBattleWinMessage();
 	}
 
 	// deduct gold based on player level
 	public void OnBattleLose ()
 	{
-		Debug.Log ("Battle Lose");
+		Hud.GetInstance().ShowBattleLostMessage();
 	}
 
 	// deduct less gold than losing
 	public void OnBattleRetreat ()
 	{
-		Debug.Log ("Retreat");
+		Debug.Log ("Retreating.....");
 	}
 	
 	/// <summary>
@@ -305,9 +307,30 @@ public class battleController : MonoBehaviour
 				
 			case BattleActions.RETREAT:
 				{
-					// show a dialogue box asking for confirmation
-					// on click yes isPlayerRetreating = true;
-					// on click no currentBattleAction = BattleActions.NONE;
+					Hud.GetInstance().ShowRetreatConfirmation();
+					while(currentBattleAction == BattleActions.RETREAT)
+					{
+						yield return null;
+					}
+
+					if(isPlayerRetreating)
+					{
+					
+						float random = Random.Range(0F, 1F);	
+						if(random > chanceOfRetreat)
+						{
+							numberOfRemaingPlayerCharactersThisTurn = 0;
+							Hud.GetInstance().ShowRetreatSuccessMessage();
+						}
+						else
+						{
+
+							isPlayerRetreating = false;
+							currentBattleAction = BattleActions.NONE;
+							Hud.GetInstance().ShowRetreatFailMessage();
+						}
+					
+					}
 				}
 				break;
 			}
@@ -467,10 +490,25 @@ public class battleController : MonoBehaviour
 	//UI interaction related --------------------
 	
 	//attack button
-	public void buttonPress_OnAttack ()
+	public void OnAttack ()
 	{
 		//changing the state to attack
 		currentBattleAction = BattleActions.ATTACK;
 	}
 	
+	public void OnRetreat()
+	{
+		currentBattleAction = BattleActions.RETREAT;
+	}
+
+	public void OnRetreatConfirm()
+	{
+		isPlayerRetreating = true;
+		currentBattleAction = BattleActions.NONE;
+	}
+
+	public void OnRetreatCancel()
+	{
+		currentBattleAction = BattleActions.NONE;
+	}
 }

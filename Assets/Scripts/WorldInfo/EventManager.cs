@@ -12,7 +12,7 @@ public class EventManager : MonoBehaviour
 	//declaring events/delegates---
 	public EventNotification<GameObject> onDeath;
 	
-	//declare any new events here can call/invoke by InvokeEvent method
+	//declare any new events here; can call/invoke by InvokeEvent method
 	
 	//initialize before start
 	void Awake ()
