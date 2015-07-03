@@ -3,8 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 
 public delegate IEnumerator ItemImplementation (GameObject caster,GameObject target);
+
 public class ItemClass
 {
+	public TargetType mTargetType;
+
 	public bool mIsAreaItem;
 	public string mItemName;
 	public string mItemDescription;
@@ -36,16 +39,16 @@ public class ItemList : MonoBehaviour
 		
 		// health potion
 		ItemClass healthPotionItem = new ItemClass ();
-		healthPotionItem.mIsAreaItem = false;
+		healthPotionItem.mTargetType = TargetType.Player;
 		healthPotionItem.mItemName = "Healing Potion";
 		healthPotionItem.mItemDescription = "Potion made from virgin's tears. Drink to restore health.";
-		healthPotionItem.mItemImplementation = temp;
+		healthPotionItem.mItemImplementation = addHPItemImplementation;
 		mAllItems.Add ((int)ItemNames.HealthPotion, healthPotionItem);
 		
 		
 		// stun
 		ItemClass stunFlask = new ItemClass ();
-		stunFlask.mIsAreaItem = false;
+		stunFlask.mTargetType = TargetType.Enemy;
 		stunFlask.mItemName = "Stun Flask";
 		stunFlask.mItemDescription = "Throw the rum bottle your party had been drinking on the enemies to stun them.";
 		stunFlask.mItemImplementation = temp;
@@ -53,7 +56,7 @@ public class ItemList : MonoBehaviour
 		
 		// item 03
 		ItemClass item_03 = new ItemClass ();
-		item_03.mIsAreaItem = false;
+		item_03.mTargetType = TargetType.Area;
 		item_03.mItemName = "Item 03";
 		item_03.mItemDescription = "Explanation !!!";
 		item_03.mItemImplementation = temp;
@@ -61,7 +64,7 @@ public class ItemList : MonoBehaviour
 		
 		// item 04
 		ItemClass item_04 = new ItemClass ();
-		item_04.mIsAreaItem = false;
+		item_04.mTargetType = TargetType.Player;
 		item_04.mItemName = "Item 04";
 		item_04.mItemDescription = "Explanation !!!";
 		item_04.mItemImplementation = temp;
@@ -69,7 +72,7 @@ public class ItemList : MonoBehaviour
 		
 		// item 05
 		ItemClass item_05 = new ItemClass ();
-		item_05.mIsAreaItem = false;
+		item_05.mTargetType = TargetType.Player;
 		item_05.mItemName = "Item 05";
 		item_05.mItemDescription = "Explanation !!!";
 		item_05.mItemImplementation = temp;
@@ -77,7 +80,7 @@ public class ItemList : MonoBehaviour
 		
 		// item 06
 		ItemClass item_06 = new ItemClass ();
-		item_06.mIsAreaItem = false;
+		item_06.mTargetType = TargetType.Player;
 		item_06.mItemName = "Item 06";
 		item_06.mItemDescription = "Explanation !!!";
 		item_06.mItemImplementation = temp;
@@ -85,11 +88,17 @@ public class ItemList : MonoBehaviour
 		
 		// item 07
 		ItemClass item_07 = new ItemClass ();
-		item_07.mIsAreaItem = false;
+		item_07.mTargetType = TargetType.Player;
 		item_07.mItemName = "Item 07";
 		item_07.mItemDescription = "Explanation !!!";
 		item_07.mItemImplementation = temp;
 		mAllItems.Add ((int)ItemNames.item_07, item_07);
+	}
+	public IEnumerator addHPItemImplementation (GameObject caster, GameObject target)
+	{
+		Debug.Log ("Health potion used by " + caster.name + ". Target is " + target.name);
+		Character Attacker = caster.GetComponent<Character> ();
+		yield return Attacker.StartCoroutine (Attacker.addHealthPoint (target, 1.0f));
 	}
 	
 	public IEnumerator temp (GameObject caster, GameObject target)

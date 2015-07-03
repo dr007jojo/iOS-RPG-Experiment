@@ -154,6 +154,32 @@ public class Character : Actor
 		updateManaSlider ();
 	}
 	
+	// functions to add health
+	// TODO: Maybe refactor them to use less code if possible??
+	virtual public IEnumerator addHealthPoint(GameObject target, float eachFightDuration = 0.5f)
+	{
+		if (DOTween.TotalPlayingTweens() > 0 || !target)
+		{
+			yield return null;
+		}
+		
+		shakeTwo(target, 1f, 0.2f, 5, 0.6f);
+	}
+	
+	void shakeTwo(GameObject target, float duration = 1, float strength = 1, int vibrato = 5, float randomness = 10)
+	{
+		float replyHealthPoint = 20.0f;
+		target.transform.DOShakePosition(duration, strength, vibrato, randomness)
+			.OnComplete(() => doReply(replyHealthPoint, target));	
+	}
+
+	public void doReply(float replyHp, GameObject target)
+	{
+		if (target.GetComponent<Actor>() == null)
+			return;
+		
+		target.GetComponent<Actor>().ReplyHP(replyHp, target, this);
+	}
 
 	
 	//utilities-----------------------

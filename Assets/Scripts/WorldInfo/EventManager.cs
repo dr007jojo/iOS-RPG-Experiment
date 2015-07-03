@@ -23,7 +23,7 @@ public class EventManager : MonoBehaviour
 		}
 	}
 	
-	//utilities-----------	
+	//Event utilities-----------	
 	
 	/// <summary>
 	/// Invokes event.

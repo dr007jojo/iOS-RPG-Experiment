@@ -31,7 +31,7 @@ public class Hud : MonoBehaviour
 	public SkillButton skillButtonInstance;
 	public ItemsButton itemButtonInstance;
 	
-	private float skillTop;
+	private float skillTop;				//--? do we need this. currently not in use. <kashyap>
 	private SkillButton skillBtn;
 	private ItemsButton itemBtn;
 
@@ -199,6 +199,10 @@ public class Hud : MonoBehaviour
 		battleController.info.OnRetreat ();
 	}
 
+	public void OnClickJointAttack ()
+	{
+		battleController.info.OnJointAttack ();
+	}
 	public void OnClickAttack ()
 	{
 		battleController.info.OnAttack ();

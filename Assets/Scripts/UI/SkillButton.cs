@@ -21,5 +21,6 @@ public class SkillButton : MonoBehaviour
 	{
 		battleController.info.currentSkillId = skillId;
 		battleController.info.currentBattleAction = battleController.BattleActions.SKILL;	
+		Hud.GetInstance().OnHideSkills();
 	}
 }

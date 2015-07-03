@@ -4,8 +4,12 @@ using System.Collections.Generic;
 
 //委托，将方法temp作为参数，可以在其他脚本创建对象调用
 public delegate IEnumerator SkillImplementation (GameObject caster,GameObject target);
+
 public class SkillClass
 {
+
+	public TargetType mTargetType;
+
 	public bool mIsAreaSpell;
 	public int mManaRequired;
 	public string mSkillName;
@@ -37,7 +41,7 @@ public class SkillList : MonoBehaviour
 		
 		// multi-attack skill 攻击多人
 		SkillClass multiAttackSkill = new SkillClass ();
-		multiAttackSkill.mIsAreaSpell = true;
+		multiAttackSkill.mTargetType = TargetType.Area;
 		multiAttackSkill.mManaRequired = 25;
 		multiAttackSkill.mSkillName = "Multi-Attack";
 		multiAttackSkill.mSkillDescription = "The hero moves like lighting and attacks all the enemies in one move. Consumes " + multiAttackSkill.mManaRequired + " mana.";
@@ -47,7 +51,7 @@ public class SkillList : MonoBehaviour
 		
 		// hex skill
 		SkillClass hexSkill = new SkillClass ();
-		multiAttackSkill.mIsAreaSpell = false;
+		hexSkill.mTargetType = TargetType.Enemy;
 		hexSkill.mManaRequired = 50;
 		hexSkill.mSkillName = "Hex";
 		hexSkill.mSkillDescription = "Use arcane powers to one enemy into chicken for the next turn. Consumes " + hexSkill.mManaRequired + " mana.";
@@ -56,7 +60,7 @@ public class SkillList : MonoBehaviour
 		
 		// back-stab skill
 		SkillClass backStabSkill = new SkillClass ();
-		multiAttackSkill.mIsAreaSpell = false;
+		backStabSkill.mTargetType = TargetType.Enemy;
 		backStabSkill.mManaRequired = 30;
 		backStabSkill.mSkillName = "Backstab";
 		backStabSkill.mSkillDescription = "The hero sinks into the shadows and attacks unseen to deal 3X damage. Consumes " + backStabSkill.mManaRequired + " mana.";
@@ -64,12 +68,14 @@ public class SkillList : MonoBehaviour
 		mAllSkills.Add ((int)SkillNames.BackStab, backStabSkill);
 	}
 	
+	//multi attack
 	public IEnumerator multiAttackSkillImplementation (GameObject caster, GameObject target)
 	{
 		Character Attacker = caster.GetComponent<Character> ();
 		yield return Attacker.StartCoroutine (Attacker.fightMultiple (battleController.info.Enemies, 1.0f));
 	}
 	
+	//temp demo implementation
 	public IEnumerator temp (GameObject caster, GameObject target)
 	{
 		Debug.Log ("Skill activated by " + caster.name + ". Target is " + target.name + ". Implementation pending.");

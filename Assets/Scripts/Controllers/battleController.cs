@@ -16,9 +16,10 @@ public class battleController : MonoBehaviour
 	public GameObject enemyFlag;		//arrow to notify which character is active
 	
 	int numberOfRemaingPlayerCharactersThisTurn;
-	bool isPlayerTurn = false;
+	bool isPlayerTurn = false;					//--? do we need this. currently not in use. <kashyap>
 	
 	public int currentPlayerIndex = 1; // so that we can show correct skills 标记记录，显示正确的技能
+	int currentTeammateIndex = 0;
 	int currentEnemyIndex = 0; 
 	
 	public int currentSkillId = -1;
@@ -37,14 +38,16 @@ public class battleController : MonoBehaviour
 	;
 	public BattleActions currentBattleAction = BattleActions.NONE;	//default
 	bool isPlayerRetreating = false;	//player retreat
-	[Range(0, 1)]public float chanceOfRetreat = 0.3f;
+	[Range(0, 1)]
+	public float
+		chanceOfRetreat = 0.3f;
 	
 	
 	// swipe variables
 	Vector2 startPos = new Vector2 (0.0f, 0.0f);
 	bool couldBeSwipe = false;
 	float startTime = 0.0f;
-	float comfortZone = 0.001f;
+	float comfortZone = 0.001f;		//--? do we need this. currently not in use <kashyap>
 	float maxSwipeTime = 5.0f;
 	float minSwipeDist = 0.01f;
 	
@@ -86,7 +89,7 @@ public class battleController : MonoBehaviour
 	//main battle sequence
 	IEnumerator battleSequence ()
 	{
-		Hud.GetInstance().ShowBattleStartMessage();
+		Hud.GetInstance ().ShowBattleStartMessage ();
 		
 		isPlayerRetreating = false;
 		
@@ -114,13 +117,13 @@ public class battleController : MonoBehaviour
 	// call the distribute the winnings according to enemy level
 	public void OnBattleWin ()
 	{
-		Hud.GetInstance().ShowBattleWinMessage();
+		Hud.GetInstance ().ShowBattleWinMessage ();
 	}
 
 	// deduct gold based on player level
 	public void OnBattleLose ()
 	{
-		Hud.GetInstance().ShowBattleLostMessage();
+		Hud.GetInstance ().ShowBattleLostMessage ();
 	}
 
 	// deduct less gold than losing
@@ -205,6 +208,7 @@ public class battleController : MonoBehaviour
 		}
 		
 		while (numberOfRemaingPlayerCharactersThisTurn > 0) {
+			Debug.Log ("numberOfRemaingPlayerCharactersThisTurn = " + numberOfRemaingPlayerCharactersThisTurn);	
 			// by default select the first available player
 			for (int i = 0; i < Players.Count(); ++i) {
 				if (!Players [i].GetComponent<FPlayer> ().hasPlayedThisTurn) {
@@ -237,10 +241,7 @@ public class battleController : MonoBehaviour
 					numberOfRemaingPlayerCharactersThisTurn -= 1;
 					Players [currentPlayerIndex].GetComponent<FPlayer> ().hasPlayedThisTurn = true;
 				
-					Tweener yieldTweener;
-					Players [currentPlayerIndex].GetComponent<Character> ().fight (Enemies [swipeResult], out yieldTweener, 1.0f);
-					if (yieldTweener != null)
-						yield return yieldTweener.WaitForCompletion ();	//watiing for the fight to finish*
+					yield return StartCoroutine (WaitForAttackAnimation (Players [currentPlayerIndex].GetComponent<Character> (), Enemies [swipeResult]));
 				
 				
 				
@@ -248,6 +249,34 @@ public class battleController : MonoBehaviour
 				break;
 				
 			case BattleActions.JOINT_ATTACK:
+				{
+					if (numberOfRemaingPlayerCharactersThisTurn == Players.Count ()) {
+						// implement joint attack
+						
+						currentEnemyIndex = -1;
+						Debug.Log ("waiting to select enemy for joint attack");
+						while (currentEnemyIndex == -1) {
+							// wait for player to select target
+							for (int i = 0; i < Players.Count(); ++i) {
+								if (Enemies [i].GetComponent<Enemy> ().isTouched ())
+									OnSwitchEnemy (i);
+							}
+							yield return null;
+						}
+						
+						for (int i = 0; i < Players.Count(); ++i) {
+							numberOfRemaingPlayerCharactersThisTurn -= 1;
+
+							if (Enemies [currentEnemyIndex] == null)
+								break;
+
+							yield return StartCoroutine (WaitForAttackAnimation (Players [i].GetComponent<Character> (), Enemies [currentEnemyIndex]));
+						}
+					} else {
+						Debug.Log ("This action is not allowed if any players have played this turn");
+						currentBattleAction = BattleActions.NONE;
+					}
+				}
 				break;
 				
 			case BattleActions.ITEM: 
@@ -256,22 +285,35 @@ public class battleController : MonoBehaviour
 					Players [currentPlayerIndex].GetComponent<FPlayer> ().hasPlayedThisTurn = true;
 				
 					currentEnemyIndex = -1;
-					if (ItemList.mAllItems [currentItemId].mIsAreaItem) {
+					currentTeammateIndex = -1;
+					if (ItemList.mAllItems [currentItemId].mTargetType == TargetType.Player) {
+						Debug.Log ("use item to Teammate");
+						while (currentTeammateIndex == -1) {
+							// wait for player to select target
+							for (int i = 0; i < Players.Count(); ++i) {
+								if (Players [i].GetComponent<FPlayer> ().isTouched ())
+									OnSwitchTeammate (i);
+							}
+							yield return null;
+						}
+						yield return StartCoroutine (ItemList.mAllItems [currentItemId].mItemImplementation (Players [currentPlayerIndex], Players [currentTeammateIndex]));
+					} else if (ItemList.mAllItems [currentItemId].mTargetType == TargetType.Enemy) {
+						Debug.Log ("use item to enemy");
+
 						while (currentEnemyIndex == -1) {
 							// wait for player to select target
-							for (int i = 0; i <Players.Count(); ++i) {
+							for (int i = 0; i < Players.Count(); ++i) {
 								if (Enemies [i].GetComponent<Enemy> ().isTouched ())
 									OnSwitchEnemy (i);
 							}
 							yield return null;
 						}
+						yield return StartCoroutine (ItemList.mAllItems [currentItemId].mItemImplementation (Players [currentPlayerIndex], Enemies [currentEnemyIndex])); 
 					} else {
 						currentEnemyIndex = 0; // This is done to avoid null reference
+						currentTeammateIndex = 0;
+						yield return StartCoroutine (ItemList.mAllItems [currentItemId].mItemImplementation (Players [currentPlayerIndex], Enemies [currentEnemyIndex]));
 					}
-				
-					Debug.Log ("item animation start");
-					yield return StartCoroutine (ItemList.mAllItems [currentItemId].mItemImplementation (Players [currentPlayerIndex], Enemies [currentEnemyIndex]));
-					Debug.Log ("item animation end");
 				}
 				break;
 				
@@ -281,8 +323,9 @@ public class battleController : MonoBehaviour
 					Players [currentPlayerIndex].GetComponent<FPlayer> ().hasPlayedThisTurn = true;
 				
 					currentEnemyIndex = -1;
-					if (SkillList.mAllSkills [currentSkillId].mIsAreaSpell) {
-						Debug.Log ("waiting for player to select target");
+					currentTeammateIndex = -1;
+					if (SkillList.mAllSkills [currentSkillId].mTargetType == TargetType.Enemy) {
+						Debug.Log ("waiting for player to select enemy");
 						while (currentEnemyIndex == -1) {
 							while (currentEnemyIndex == -1) {
 								// wait for player to select emey in case of targetted attack
@@ -290,44 +333,51 @@ public class battleController : MonoBehaviour
 									if (Enemies [i].GetComponent<Enemy> ().isTouched ())
 										OnSwitchEnemy (i);
 								}
-							
-							
 								yield return null;
 							}
 						}
+						yield return StartCoroutine (SkillList.mAllSkills [currentSkillId].mSkillImplementation (Players [currentPlayerIndex], Enemies [currentEnemyIndex]));
+					} else if (SkillList.mAllSkills [currentSkillId].mTargetType == TargetType.Player) {
+						Debug.Log ("waiting for player to select Teammate");
+						while (currentTeammateIndex == -1) {
+							while (currentTeammateIndex == -1) {
+								for (int i = 0; i < Players.Count(); ++i) {
+									if (Players [i].GetComponent<FPlayer> ().isTouched ())
+										OnSwitchTeammate (i);
+								}
+
+
+								yield return null;
+							}
+						}
+						yield return StartCoroutine (SkillList.mAllSkills [currentSkillId].mSkillImplementation (Players [currentPlayerIndex], Players [currentTeammateIndex]));
 					} else {
 						currentEnemyIndex = 0; // This is done to avoid null reference
+						currentTeammateIndex = 0;
+						yield return StartCoroutine (SkillList.mAllSkills [currentSkillId].mSkillImplementation (Players [currentPlayerIndex], Players [currentTeammateIndex]));
 					}
-				
-					Debug.Log ("skill animation start");
-					yield return StartCoroutine (SkillList.mAllSkills [currentSkillId].mSkillImplementation (Players [currentPlayerIndex], Enemies [currentEnemyIndex]));
-					Debug.Log ("skill animation end");
+					 
 				}
 				break;
 				
 			case BattleActions.RETREAT:
 				{
-					Hud.GetInstance().ShowRetreatConfirmation();
-					while(currentBattleAction == BattleActions.RETREAT)
-					{
+					Hud.GetInstance ().ShowRetreatConfirmation ();
+					while (currentBattleAction == BattleActions.RETREAT) {
 						yield return null;
 					}
 
-					if(isPlayerRetreating)
-					{
+					if (isPlayerRetreating) {
 					
-						float random = Random.Range(0F, 1F);	
-						if(random > chanceOfRetreat)
-						{
+						float random = Random.Range (0F, 1F);	
+						if (random > chanceOfRetreat) {
 							numberOfRemaingPlayerCharactersThisTurn = 0;
-							Hud.GetInstance().ShowRetreatSuccessMessage();
-						}
-						else
-						{
+							Hud.GetInstance ().ShowRetreatSuccessMessage ();
+						} else {
 
 							isPlayerRetreating = false;
 							currentBattleAction = BattleActions.NONE;
-							Hud.GetInstance().ShowRetreatFailMessage();
+							Hud.GetInstance ().ShowRetreatFailMessage ();
 						}
 					
 					}
@@ -354,19 +404,22 @@ public class battleController : MonoBehaviour
 	{
 		//enemies fight
 		foreach (var enemy in Enemies) {
-			
-			Tweener yieldTweener; //using for yielding untill a single fighting is done.
-			
+
 			if (Players.Count <= 0) 	//break it if there is no enemies
 				break;
-			
-			enemy.GetComponent<Character> ().fight (Players [Random.Range (0, Players.Count)], out yieldTweener, 1.0f);	//fight sequence
-			
-			if (yieldTweener != null) {
-				yield return yieldTweener.WaitForCompletion ();	//watiing for the fight to finish
-			}
+			yield return StartCoroutine (WaitForAttackAnimation (enemy.GetComponent<Character> (), Players [Random.Range (0, Players.Count)]));
+
 			yield return null;
 		}
+	}
+	
+	//basic attack sequence, use by both allies and enemies
+	IEnumerator WaitForAttackAnimation (Character attacker, GameObject attacked)
+	{
+		Tweener yieldTweener;
+		attacker.fight (attacked, out yieldTweener, 1.0f);
+		if (yieldTweener != null)
+			yield return yieldTweener.WaitForCompletion ();	//watiing for the fight to finish*
 	}
 	
 	
@@ -388,6 +441,12 @@ public class battleController : MonoBehaviour
 		currentEnemyIndex = index;
 		enemyFlag.GetComponent<ActiveCharacterInfo> ().setActivateArrow (Enemies [currentEnemyIndex].transform);
 		Debug.Log ("current enemy index is " + currentEnemyIndex);
+	}
+	void OnSwitchTeammate (int index)
+	{
+		currentTeammateIndex = index;
+		//  playerFlag.GetComponent<ActiveCharacterInfo> ().setActivateArrow (Players [currentPlayerIndex].transform);
+		Debug.Log ("current Teammate index is " + currentTeammateIndex);
 	}
 	
 	/// <summary>
@@ -420,8 +479,6 @@ public class battleController : MonoBehaviour
 				hit = Physics2D.Linecast (startPos, EndPos);
 				
 				for (int i = 0; i < Enemies.Count(); ++i) {
-					if (hit == null)
-						return -1;
 					if (hit.collider == null)
 						return -1;
 					if (hit.collider.gameObject == null)
@@ -489,6 +546,11 @@ public class battleController : MonoBehaviour
 	
 	//UI interaction related --------------------
 	
+	public void OnJointAttack ()
+	{
+		//changing the state to attack
+		currentBattleAction = BattleActions.JOINT_ATTACK;
+	}
 	//attack button
 	public void OnAttack ()
 	{
@@ -496,18 +558,18 @@ public class battleController : MonoBehaviour
 		currentBattleAction = BattleActions.ATTACK;
 	}
 	
-	public void OnRetreat()
+	public void OnRetreat ()
 	{
 		currentBattleAction = BattleActions.RETREAT;
 	}
 
-	public void OnRetreatConfirm()
+	public void OnRetreatConfirm ()
 	{
 		isPlayerRetreating = true;
 		currentBattleAction = BattleActions.NONE;
 	}
 
-	public void OnRetreatCancel()
+	public void OnRetreatCancel ()
 	{
 		currentBattleAction = BattleActions.NONE;
 	}

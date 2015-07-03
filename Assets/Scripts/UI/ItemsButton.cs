@@ -22,5 +22,6 @@ public class ItemsButton : MonoBehaviour
 	{
 		battleController.info.currentItemId = itemId;
 		battleController.info.currentBattleAction = battleController.BattleActions.ITEM;
+		Hud.GetInstance().OnHideItems();
 	}
 }
