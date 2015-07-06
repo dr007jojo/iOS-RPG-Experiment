@@ -10,7 +10,9 @@ public class EventManager : MonoBehaviour
 	public static EventManager info;
 
 	//declaring events/delegates---
-	public EventNotification<GameObject> onDeath;
+	public EventNotification<GameObject> onDeath;	//death
+	public EventNotification<bool> onJointAttack;	//join attack
+	
 	
 	//declare any new events here; can call/invoke by InvokeEvent method
 	

@@ -102,4 +102,32 @@ public static class myUtilities
 		
 		return combinedBounds;
 	}
+	
+	/// <summary>
+	/// Gets the random around this number.
+	/// </summary>
+	/// <param name="Max">Max.</param>
+	/// <param name="Min">Minimum.</param>
+	public static float getRandomNumberAround (this float inValue, float up, float down)
+	{
+		float highRandom = Random.Range (inValue, inValue + up);
+		float lowRandom = Random.Range (inValue - down, inValue);
+		
+		return Random.Range (lowRandom, highRandom);
+	}
+	
+	/// <summary>
+	/// Gets the random vector3 around this vector3
+	/// </summary>
+	/// <param name="maxPerAxis">Max per axis.</param>
+	/// <param name="minPerAxis">Minimum per axis.</param>
+	public static Vector3 getRandomVector3Around (this Vector3 inVect3, float upPerAxis, float downPerAxis)
+	{
+		float randomX = inVect3.x.getRandomNumberAround (upPerAxis, downPerAxis);
+		float randomY = inVect3.y.getRandomNumberAround (upPerAxis, downPerAxis);
+		float randomZ = inVect3.z.getRandomNumberAround (upPerAxis, downPerAxis);
+		
+		return new Vector3 (randomX, randomY, randomZ);
+	}
+	 
 }

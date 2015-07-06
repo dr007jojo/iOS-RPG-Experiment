@@ -18,12 +18,22 @@ public class battleController : MonoBehaviour
 	int numberOfRemaingPlayerCharactersThisTurn;
 	bool isPlayerTurn = false;					//--? do we need this. currently not in use. <kashyap>
 	
-	public int currentPlayerIndex = 1; // so that we can show correct skills 标记记录，显示正确的技能
+	//[HideInInspector]
+	public float
+		joinAttackQTENumber;         //How many times we put down the button
+	
+	[HideInInspector]
+	public int
+		currentPlayerIndex = 1; // so that we can show correct skills 标记记录，显示正确的技能
 	int currentTeammateIndex = 0;
 	int currentEnemyIndex = 0; 
 	
-	public int currentSkillId = -1;
-	public int currentItemId = -1;
+	[HideInInspector]
+	public int
+		currentSkillId = -1;
+	[HideInInspector]
+	public int
+		currentItemId = -1;
 	
 	//actions while battle scene is active
 	public enum BattleActions
@@ -36,7 +46,10 @@ public class battleController : MonoBehaviour
 		RETREAT
 	}
 	;
-	public BattleActions currentBattleAction = BattleActions.NONE;	//default
+	
+	[HideInInspector]
+	public BattleActions
+		currentBattleAction = BattleActions.NONE;	//default
 	bool isPlayerRetreating = false;	//player retreat
 	[Range(0, 1)]
 	public float
@@ -71,13 +84,15 @@ public class battleController : MonoBehaviour
 	void OnEnable ()
 	{
 		//registering event
-		EventManager.info.onDeath += onActorDeath;
+		EventManager.info.onDeath += onActorDeath;		//death event
+		EventManager.info.onJointAttack += onJointAttackActivate;	//joint attack event
 	}
 	
 	void OnDisable ()
 	{
-		//deregistering event
-		EventManager.info.onDeath -= onActorDeath;
+		//de-registering event
+		EventManager.info.onDeath -= onActorDeath;		//death event
+		EventManager.info.onJointAttack -= onJointAttackActivate;	//joint attack event
 	}
 	
 	// Use this for initialization
@@ -162,6 +177,18 @@ public class battleController : MonoBehaviour
 		//destroying the characters that are dead, we can use particle/extra effects later.
 		//Destroy (inActor);		//obsolute - moved to per character subclass
 		
+	}
+	
+	/// <summary>
+	/// on joint attack initialize
+	/// </summary>
+	void onJointAttackActivate (bool bActive)
+	{
+		if (Hud.GetInstance ().joinAttackQTEButton != null)	//if valid
+			Hud.GetInstance ().joinAttackQTEButton.SetActive (bActive);//Active the QTE button
+		
+		if (bActive)							//only when its starting
+			joinAttackQTENumber = 0;            //reset the var of put down the QTE button
 	}
 	
 	/// <summary>
@@ -251,30 +278,23 @@ public class battleController : MonoBehaviour
 			case BattleActions.JOINT_ATTACK:
 				{
 					if (numberOfRemaingPlayerCharactersThisTurn == Players.Count ()) {
-						// implement joint attack
-						
+						numberOfRemaingPlayerCharactersThisTurn -= Players.Count;
+						//Players[currentPlayerIndex].GetComponent<FPlayer>().hasPlayedThisTurn = true;
+					
 						currentEnemyIndex = -1;
 						Debug.Log ("waiting to select enemy for joint attack");
 						while (currentEnemyIndex == -1) {
-							// wait for player to select target
-							for (int i = 0; i < Players.Count(); ++i) {
+							// wait for player to select enemy in case of targetted attack
+							for (int i = 0; i < Enemies.Count(); ++i) {
 								if (Enemies [i].GetComponent<Enemy> ().isTouched ())
 									OnSwitchEnemy (i);
 							}
 							yield return null;
 						}
 						
-						for (int i = 0; i < Players.Count(); ++i) {
-							numberOfRemaingPlayerCharactersThisTurn -= 1;
-
-							if (Enemies [currentEnemyIndex] == null)
-								break;
-
-							yield return StartCoroutine (WaitForAttackAnimation (Players [i].GetComponent<Character> (), Enemies [currentEnemyIndex]));
-						}
-					} else {
-						Debug.Log ("This action is not allowed if any players have played this turn");
-						currentBattleAction = BattleActions.NONE;
+						//joint attack
+						yield return StartCoroutine (Players [Random.Range (0, Players.Count)].GetComponent<FPlayer> ().comeToMeAndAttack (Players.ToArray (), Enemies [currentEnemyIndex], 0.65f, 0.35f));
+						
 					}
 				}
 				break;
@@ -302,7 +322,7 @@ public class battleController : MonoBehaviour
 
 						while (currentEnemyIndex == -1) {
 							// wait for player to select target
-							for (int i = 0; i < Players.Count(); ++i) {
+							for (int i = 0; i < Enemies.Count(); ++i) {
 								if (Enemies [i].GetComponent<Enemy> ().isTouched ())
 									OnSwitchEnemy (i);
 							}
@@ -329,7 +349,7 @@ public class battleController : MonoBehaviour
 						while (currentEnemyIndex == -1) {
 							while (currentEnemyIndex == -1) {
 								// wait for player to select emey in case of targetted attack
-								for (int i = 0; i <Players.Count(); ++i) {
+								for (int i = 0; i <Enemies.Count(); ++i) {
 									if (Enemies [i].GetComponent<Enemy> ().isTouched ())
 										OnSwitchEnemy (i);
 								}
@@ -546,11 +566,13 @@ public class battleController : MonoBehaviour
 	
 	//UI interaction related --------------------
 	
+	//joint attack
 	public void OnJointAttack ()
 	{
 		//changing the state to attack
 		currentBattleAction = BattleActions.JOINT_ATTACK;
 	}
+	
 	//attack button
 	public void OnAttack ()
 	{
@@ -572,5 +594,11 @@ public class battleController : MonoBehaviour
 	public void OnRetreatCancel ()
 	{
 		currentBattleAction = BattleActions.NONE;
+	}
+	
+	//pressing on the charge
+	public void joinAttackQTECount ()
+	{
+		joinAttackQTENumber += 0.05f;
 	}
 }

@@ -97,8 +97,8 @@ public class ItemList : MonoBehaviour
 	public IEnumerator addHPItemImplementation (GameObject caster, GameObject target)
 	{
 		Debug.Log ("Health potion used by " + caster.name + ". Target is " + target.name);
-		Character Attacker = caster.GetComponent<Character> ();
-		yield return Attacker.StartCoroutine (Attacker.addHealthPoint (target, 1.0f));
+		Character caster_ch = caster.GetComponent<Character> ();
+		yield return caster_ch.StartCoroutine (caster_ch.addHealthPoint (target, 1.0f));
 	}
 	
 	public IEnumerator temp (GameObject caster, GameObject target)

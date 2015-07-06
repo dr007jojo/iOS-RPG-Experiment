@@ -38,6 +38,8 @@ public class Hud : MonoBehaviour
 	public UIPopupBox retreatConfirmBox;
 	public UIMessage messageBox;
 	
+	public GameObject joinAttackQTEButton;   //join attack QTE button
+	
 	static Hud thisInstance = null;
 	
 	public menus currentMenu = menus.None;	//current menu active
@@ -58,6 +60,7 @@ public class Hud : MonoBehaviour
 		//设置两个面板为未激活状态
 		skillsPanel.SetActive (false);
 		itemsPanel.SetActive (false);
+		joinAttackQTEButton.SetActive (false);
 		retreatConfirmBox.gameObject.SetActive (false);
 		messageBox.gameObject.SetActive (false);
 	}
@@ -70,6 +73,8 @@ public class Hud : MonoBehaviour
 		float xp = (float)PlayerData.GetInstance ().partyExperience;
 		SliderXP.value = (xp / 100.0f);
 	}
+	
+	//----exposed functions....
 	
 	public void OnSave ()
 	{
@@ -202,10 +207,23 @@ public class Hud : MonoBehaviour
 	public void OnClickJointAttack ()
 	{
 		battleController.info.OnJointAttack ();
+		
+		//no menu should open when fighting
+		OnHideItems ();
+		OnHideSkills ();
 	}
 	public void OnClickAttack ()
 	{
 		battleController.info.OnAttack ();
+		
+		//no menu should open when fighting
+		OnHideItems ();
+		OnHideSkills ();
+	}
+	
+	public void OnClickQTE ()
+	{
+		battleController.info.joinAttackQTECount ();
 	}
 
 	public void OnRetreatYes ()

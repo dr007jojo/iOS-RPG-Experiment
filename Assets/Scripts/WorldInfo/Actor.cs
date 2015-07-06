@@ -123,11 +123,12 @@ public class Actor : MonoBehaviour
 		return result;
 	}
 	
-	virtual public void ReplyHP(float RHP, GameObject damageDealer, Actor instigator = null)
+	//--?? some explaination please. <kashyap>
+	virtual public void ReplyHP (float RHP, GameObject damageDealer, Actor instigator = null)
 	{
-		health = Mathf.Clamp(health + RHP, 0, maxHealth);	
+		health = Mathf.Clamp (health + RHP, 0, maxHealth);	
 		
-		updateHealthSlider();
+		updateHealthSlider ();
 	}
 	
 }
